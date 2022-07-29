@@ -1,38 +1,58 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
+	"github.com/go-chi/render"
+	"github.com/mmmanyfold/rami-notion-api/pkg/api"
+	"net/http"
 	"os"
-
-	"github.com/jomei/notionapi"
+	"time"
 )
 
-var database = map[string]notionapi.DatabaseID{
-	"projects":   notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"),
-	"homepage":   notionapi.DatabaseID("a79aece399014bc282a27024de23464a"),
-	"transcripts": notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
-}
-
 func main() {
-	notionAPIKey := os.Getenv("NOTION_API_KEY")
-	client := notionapi.NewClient(notionapi.Token(notionAPIKey))
-	dbRequest := notionapi.DatabaseQueryRequest{
-		Filter:      nil,
-		Sorts:       nil,
-		StartCursor: "",
-		PageSize:    0,
-	}
-	db, err := client.Database.Query(context.Background(), database["projects"], &dbRequest)
-	if err != nil {
-		panic(err)
+	var port string
+
+	port = os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
 	}
 
-	if len(db.Results) > 0 {
-		var pages []notionapi.Page
-		for i, r := range db.Results {
-			fmt.Printf("id: %s\n", r.ID)
-			pages = append(pages, db.Results[i])
-		}
-	}
+	API := api.New()
+
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+
+	// basic CORS
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	})
+
+	// middleware setup
+	r.Use(
+		corsHandler.Handler,
+		render.SetContentType(render.ContentTypeJSON), // set content-type headers as application/json
+		middleware.Logger,                             // log api request calls
+		middleware.StripSlashes,                       // match paths with a trailing slash, strip it, and continue routing through the mux
+		middleware.Recoverer,                          // recover from panics without crashing server
+		middleware.Timeout(3000*time.Millisecond),     // Stop processing after 3 seconds
+	)
+
+	// obligatory health-check endpoint
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+	})
+
+	r.Route("/api", func(r chi.Router) {
+		r.Post("/sync", API.Sync)
+	})
+
+	http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 }

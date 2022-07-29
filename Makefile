@@ -13,4 +13,10 @@ deploy:
 run:
 	go run ./cmd/api/main.go
 
-.PHONY: deps test build deploy run
+fmt:
+	go fmt ./...
+
+vet:
+	go vet ./...
+
+.PHONY: deps test build deploy run fmt vet

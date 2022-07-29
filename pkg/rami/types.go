@@ -1,7 +1,6 @@
-package pkg
+package rami
 
 type Asset struct {
-
 }
 
 type HomePageAsset struct {
