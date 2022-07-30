@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/jomei/notionapi"
 	"github.com/mmmanyfold/rami-notion-api/pkg/rami"
-	"time"
 )
 
 // request per second to notion api limit
@@ -31,36 +30,30 @@ func GetHomePageProjectsAndAssets(client *notionapi.Client) error {
 		return err
 	}
 
-	_, _ = rateLimiter.Take()
-	_, _ = rateLimiter.Take()
-	_, _ = rateLimiter.Take()
-	_, _ = rateLimiter.Take()
-
-	fmt.Println("sleeping for 1 sec ....")
-	time.Sleep(time.Second)
-
-	ok, err := rateLimiter.Take()
+	// take one from the request stack for the first request to retrieve all the ids
+	_, _, err = rateLimiter.Take()
 	if err != nil {
 		return err
 	}
 
-	if ok {
-		db, err := client.Database.Query(context.Background(), database["projects"], &dbRequest)
-		if err != nil {
-			panic(err)
-		}
+	db, err := client.Database.Query(context.Background(), database["projects"], &dbRequest)
+	if err != nil {
+		return err
+	}
 
-		if len(db.Results) > 0 {
-			var pages []notionapi.Page
-			for i, r := range db.Results {
-				fmt.Printf("id: %s\n", r.ID)
-				pages = append(pages, db.Results[i])
-			}
+	if len(db.Results) > 0 {
+		var pages []notionapi.Page
+		for i, r := range db.Results {
+			fmt.Printf("id: %s\n", r.ID)
+			pages = append(pages, db.Results[i])
 		}
 	}
 
 	var _ []rami.HomePageAsset
 
-	defer rateLimiter.Close()
+	if err := rateLimiter.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }

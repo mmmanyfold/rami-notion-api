@@ -19,4 +19,7 @@ fmt:
 check:
 	go vet ./...
 
-.PHONY: deps test build deploy run fmt check
+dev:
+	reflex -c reflex.conf
+
+.PHONY: deps test build deploy run fmt check dev
