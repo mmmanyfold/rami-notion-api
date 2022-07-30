@@ -16,7 +16,7 @@ run:
 fmt:
 	go fmt ./...
 
-vet:
+check:
 	go vet ./...
 
-.PHONY: deps test build deploy run fmt vet
+.PHONY: deps test build deploy run fmt check

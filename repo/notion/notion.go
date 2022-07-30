@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// request per second to notion api
+// request per second to notion api limit
 const rate uint64 = 3
 
 var database = map[string]notionapi.DatabaseID{
@@ -26,7 +26,7 @@ func GetHomePageProjectsAndAssets(client *notionapi.Client) error {
 	}
 
 	ctx := context.Background()
-	rateLimiter, err := NewRateLimiter(ctx, rate)
+	rateLimiter, err := NewRateLimiter(ctx, "projects", rate, false)
 	if err != nil {
 		return err
 	}
