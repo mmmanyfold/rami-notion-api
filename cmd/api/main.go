@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
@@ -42,7 +43,7 @@ func main() {
 		middleware.Logger,                             // log api request calls
 		middleware.StripSlashes,                       // match paths with a trailing slash, strip it, and continue routing through the mux
 		middleware.Recoverer,                          // recover from panics without crashing server
-		// middleware.Timeout(3000*time.Millisecond),  // Stop processing after 3 seconds
+		middleware.Timeout(3000*time.Millisecond),     // Stop processing after 3 seconds
 	)
 
 	// obligatory health-check endpoint

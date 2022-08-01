@@ -7,13 +7,40 @@ import (
 	"github.com/mmmanyfold/rami-notion-api/pkg/rami"
 )
 
-// request per second to notion api limit
-const rate uint64 = 3
+// Rate request per second to notion API
+const Rate uint64 = 3
 
 var database = map[string]notionapi.DatabaseID{
 	"projects":    notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"),
 	"homepage":    notionapi.DatabaseID("a79aece399014bc282a27024de23464a"),
 	"transcripts": notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
+}
+
+func GetTranscripts(client *notionapi.Client) (transcripts []rami.Transcript, err error) {
+	dbRequest := notionapi.DatabaseQueryRequest{
+		Filter:      nil,
+		Sorts:       nil,
+		StartCursor: "",
+		PageSize:    0,
+	}
+
+	db, err := client.Database.Query(context.Background(), database["transcripts"], &dbRequest)
+	if err != nil {
+		return transcripts, err
+	}
+
+	if len(db.Results) > 0 {
+		for _, r := range db.Results {
+			var transcript rami.Transcript
+			transcript.UUID = string(r.ID)
+			if projectRelationProperty, ok := r.Properties["Project"].(*notionapi.RelationProperty); ok {
+				transcript.ProjectUUID = string(projectRelationProperty.ID)
+			}
+			transcripts = append(transcripts, transcript)
+		}
+	}
+
+	return transcripts, nil
 }
 
 func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, err error) {
@@ -49,24 +76,12 @@ func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, e
 	return assets, nil
 }
 
-func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset) error {
+func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcripts []rami.Transcript) error {
 	dbRequest := notionapi.DatabaseQueryRequest{
 		Filter:      nil,
 		Sorts:       nil,
 		StartCursor: "",
 		PageSize:    0,
-	}
-
-	ctx := context.Background()
-	rateLimiter, err := NewRateLimiter(ctx, "projects", rate, false)
-	if err != nil {
-		return err
-	}
-
-	// take one from the request stack for the first request to retrieve all the ids
-	_, _, err = rateLimiter.Take()
-	if err != nil {
-		return err
 	}
 
 	db, err := client.Database.Query(context.Background(), database["projects"], &dbRequest)
@@ -87,14 +102,11 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset) error {
 				Medium:         ProcessRichTextProperty(&r, "Medium"),
 				Description:    ProcessRichTextProperty(&r, "Description"),
 				HomePageAssets: processHomePageAsset(&r, assets),
+				Transcript:     processTranscript(&r, transcripts),
 			})
 		}
-		//fmt.Printf("%+v\n", projects)
+		fmt.Printf("%+v\n", projects)
 		//fmt.Printf("len %d\n", len(projects))
-	}
-
-	if err := rateLimiter.Close(); err != nil {
-		return err
 	}
 
 	return nil
@@ -149,4 +161,19 @@ func processHomePageAsset(page *notionapi.Page, assets []rami.HomePageAsset) (ho
 	}
 
 	return homePageAssets
+}
+
+func processTranscript(page *notionapi.Page, transcripts []rami.Transcript) (transcript rami.Transcript) {
+	if relationProperty, ok := page.Properties["Transcript"].(*notionapi.RelationProperty); ok {
+		fmt.Println(">>>", relationProperty)
+		if len(relationProperty.Relation) > 0 {
+			for _, t := range transcripts {
+				if t.UUID == string(relationProperty.Relation[0].ID) {
+					transcript = t
+				}
+			}
+		}
+	}
+
+	return transcript
 }

@@ -1,12 +1,13 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"github.com/jomei/notionapi"
 	"github.com/mmmanyfold/rami-notion-api/repo/notion"
 	"net/http"
 	"os"
-	"sync"
+	"time"
 )
 
 type API struct {
@@ -21,24 +22,47 @@ func New() *API {
 	}
 }
 
-func (a *API) Sync(w http.ResponseWriter, r *http.Request) {
-	var wg sync.WaitGroup
+func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+	rateLimiter, err := notion.NewRateLimiter(ctx, "projects", notion.Rate, true)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	wg.Add(1)
-	assets, err := notion.GetHomePageAssets(a.notionClient)
+	// take one from the request stack for the first request to retrieve all the ids
+	_, _, err = rateLimiter.Take()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	transcripts, err := notion.GetTranscripts(api.notionClient)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to retrieve HomePageAssets from notion API"), http.StatusInternalServerError)
 		return
 	}
 
-	wg.Add(1)
-	err = notion.GetProjects(a.notionClient, assets)
+	time.Sleep(time.Second)
+
+	assets, err := notion.GetHomePageAssets(api.notionClient)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to retrieve HomePageAssets from notion API"), http.StatusInternalServerError)
+		return
+	}
+
+	time.Sleep(time.Second)
+
+	err = notion.GetProjects(api.notionClient, assets, transcripts)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
 		return
 	}
 
-	wg.Wait()
+	if err := rateLimiter.Close(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("processed successfully"))

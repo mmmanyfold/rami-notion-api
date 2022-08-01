@@ -2,6 +2,12 @@ package rami
 
 import "github.com/jomei/notionapi"
 
+type Transcript struct {
+	UUID        string   `json:"uuid,omitempty"`
+	ProjectUUID string   `json:"ProjectUUID,omitempty"`
+	Blocks      []string `json:"blocks,omitempty"`
+}
+
 type HomePageAsset struct {
 	UUID  string           `json:"uuid,omitempty"`
 	Files []notionapi.File `json:"files,omitempty"`
@@ -20,4 +26,5 @@ type Project struct {
 	Medium         string        `json:"medium,omitempty"`
 	Description    string        `json:"description,omitempty"`
 	HomePageAssets HomePageAsset `json:"homePageAssets,omitempty"`
+	Transcript     Transcript    `json:"transcript,omitempty"`
 }
