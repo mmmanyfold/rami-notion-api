@@ -23,10 +23,18 @@ func New() *API {
 
 func (a *API) Sync(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
+
 	wg.Add(1)
-	err := notion.GetDenormalizedProjects(a.notionClient)
+	assets, err := notion.GetHomePageAssets(a.notionClient)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to retrieve HomePage projects from notion API"), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("failed to retrieve HomePageAssets from notion API"), http.StatusInternalServerError)
+		return
+	}
+
+	wg.Add(1)
+	err = notion.GetProjects(a.notionClient, assets)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
 		return
 	}
 

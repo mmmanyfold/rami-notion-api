@@ -16,7 +16,40 @@ var database = map[string]notionapi.DatabaseID{
 	"transcripts": notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
 }
 
-func GetDenormalizedProjects(client *notionapi.Client) error {
+func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, err error) {
+	dbRequest := notionapi.DatabaseQueryRequest{
+		Filter:      nil,
+		Sorts:       nil,
+		StartCursor: "",
+		PageSize:    0,
+	}
+
+	db, err := client.Database.Query(context.Background(), database["homepage"], &dbRequest)
+	if err != nil {
+		return assets, err
+	}
+
+	if len(db.Results) > 0 {
+		for _, r := range db.Results {
+			if len(r.Properties["File"].(*notionapi.FilesProperty).Files) > 0 {
+				asset := rami.HomePageAsset{
+					UUID: string(r.ID),
+				}
+				if len(r.Properties["File"].(*notionapi.FilesProperty).Files) > 0 {
+					for _, f := range r.Properties["File"].(*notionapi.FilesProperty).Files {
+						asset.Files = append(asset.Files, f)
+					}
+				}
+				assets = append(assets, asset)
+			}
+
+		}
+	}
+
+	return assets, nil
+}
+
+func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset) error {
 	dbRequest := notionapi.DatabaseQueryRequest{
 		Filter:      nil,
 		Sorts:       nil,
@@ -53,7 +86,7 @@ func GetDenormalizedProjects(client *notionapi.Client) error {
 				Thumbnail:      ProcessThumbnail(&r),
 				Medium:         ProcessRichTextProperty(&r, "Medium"),
 				Description:    ProcessRichTextProperty(&r, "Description"),
-				HomePageAssets: processHomePageAssets(&r),
+				HomePageAssets: processHomePageAsset(&r, assets),
 			})
 		}
 		//fmt.Printf("%+v\n", projects)
@@ -103,10 +136,17 @@ func ProcessRichTextProperty(page *notionapi.Page, field string) (text string) {
 	return text
 }
 
-func processHomePageAssets(page *notionapi.Page) (assets []rami.Asset) {
+func processHomePageAsset(page *notionapi.Page, assets []rami.HomePageAsset) (homePageAssets rami.HomePageAsset) {
 	if relationProperty, ok := page.Properties["Homepage Assets"].(*notionapi.RelationProperty); ok {
-		fmt.Println("->>>", relationProperty.Relation)
+		for _, asset := range assets {
+			if asset.UUID == string(relationProperty.Relation[0].ID) {
+				homePageAssets = rami.HomePageAsset{
+					UUID:  asset.UUID,
+					Files: asset.Files,
+				}
+			}
+		}
 	}
 
-	return assets
+	return homePageAssets
 }
