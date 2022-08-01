@@ -16,7 +16,7 @@ var database = map[string]notionapi.DatabaseID{
 	"transcripts": notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
 }
 
-func GetHomePageProjectsAndAssets(client *notionapi.Client) error {
+func GetDenormalizedProjects(client *notionapi.Client) error {
 	dbRequest := notionapi.DatabaseQueryRequest{
 		Filter:      nil,
 		Sorts:       nil,
@@ -42,18 +42,71 @@ func GetHomePageProjectsAndAssets(client *notionapi.Client) error {
 	}
 
 	if len(db.Results) > 0 {
-		var pages []notionapi.Page
-		for i, r := range db.Results {
-			fmt.Printf("id: %s\n", r.ID)
-			pages = append(pages, db.Results[i])
+		var projects []rami.Project
+		for _, r := range db.Results {
+			projects = append(projects, rami.Project{
+				UUID:           string(r.ID),
+				ID:             ProcessRichTextProperty(&r, "ID"),
+				Title:          r.Properties["Title"].(*notionapi.TitleProperty).Title[0].Text.Content,
+				Tags:           ProcessTags(&r),
+				Year:           ProcessYears(&r),
+				Thumbnail:      ProcessThumbnail(&r),
+				Medium:         ProcessRichTextProperty(&r, "Medium"),
+				Description:    ProcessRichTextProperty(&r, "Description"),
+				HomePageAssets: processHomePageAssets(&r),
+			})
 		}
+		//fmt.Printf("%+v\n", projects)
+		//fmt.Printf("len %d\n", len(projects))
 	}
-
-	var _ []rami.HomePageAsset
 
 	if err := rateLimiter.Close(); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func ProcessTags(page *notionapi.Page) (tags []rami.Tag) {
+	if multiSelectProperty, ok := page.Properties["Tags"].(*notionapi.MultiSelectProperty); ok {
+		for _, t := range multiSelectProperty.MultiSelect {
+			tags = append(tags, rami.Tag(t.Name))
+		}
+	}
+	return tags
+}
+
+func ProcessYears(page *notionapi.Page) (year string) {
+	if selectProperty, ok := page.Properties["Year"].(*notionapi.SelectProperty); ok {
+		year = selectProperty.Select.Name
+	}
+	return year
+}
+
+func ProcessThumbnail(page *notionapi.Page) (thumbnailUrl string) {
+	if filesProperty, ok := page.Properties["Thumbnail"].(*notionapi.FilesProperty); ok {
+		thumbnailUrl = filesProperty.Files[0].File.URL
+	}
+
+	return thumbnailUrl
+}
+
+func ProcessRichTextProperty(page *notionapi.Page, field string) (text string) {
+	if textProperty, ok := page.Properties[field].(*notionapi.RichTextProperty); ok {
+		for _, rt := range textProperty.RichText {
+			if len(textProperty.RichText) > 0 {
+				text += rt.Text.Content
+			}
+		}
+	}
+
+	return text
+}
+
+func processHomePageAssets(page *notionapi.Page) (assets []rami.Asset) {
+	if relationProperty, ok := page.Properties["Homepage Assets"].(*notionapi.RelationProperty); ok {
+		fmt.Println("->>>", relationProperty.Relation)
+	}
+
+	return assets
 }

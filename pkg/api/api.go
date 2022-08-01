@@ -6,6 +6,7 @@ import (
 	"github.com/mmmanyfold/rami-notion-api/repo/notion"
 	"net/http"
 	"os"
+	"sync"
 )
 
 type API struct {
@@ -21,11 +22,15 @@ func New() *API {
 }
 
 func (a *API) Sync(w http.ResponseWriter, r *http.Request) {
-	err := notion.GetHomePageProjectsAndAssets(a.notionClient)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	err := notion.GetDenormalizedProjects(a.notionClient)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to retrieve HomePage projects from notion API"), http.StatusInternalServerError)
 		return
 	}
+
+	wg.Wait()
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("processed successfully"))
