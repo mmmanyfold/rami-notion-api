@@ -2,12 +2,12 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/jomei/notionapi"
 	"github.com/mmmanyfold/rami-notion-api/repo/notion"
 	"net/http"
 	"os"
-	"time"
 )
 
 type API struct {
@@ -30,7 +30,6 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// take one from the request stack for the first request to retrieve all the ids
 	_, _, err = rateLimiter.Take()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -43,7 +42,7 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second)
 
 	assets, err := notion.GetHomePageAssets(api.notionClient)
 	if err != nil {
@@ -51,9 +50,9 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second)
 
-	err = notion.GetProjects(api.notionClient, assets, transcripts)
+	projects, err := notion.GetProjects(api.notionClient, assets, transcripts)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
 		return
@@ -65,5 +64,10 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("processed successfully"))
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false) // don't encode <, >, &
+	if err := encoder.Encode(projects); err != nil {
+		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
+		return
+	}
 }

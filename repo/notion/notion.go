@@ -2,9 +2,10 @@ package notion
 
 import (
 	"context"
-	"fmt"
 	"github.com/jomei/notionapi"
 	"github.com/mmmanyfold/rami-notion-api/pkg/rami"
+	"net/url"
+	"time"
 )
 
 // Rate request per second to notion API
@@ -76,7 +77,7 @@ func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, e
 	return assets, nil
 }
 
-func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcripts []rami.Transcript) error {
+func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcripts []rami.Transcript) (projectsResponse rami.ProjectsResponse, err error) {
 	dbRequest := notionapi.DatabaseQueryRequest{
 		Filter:      nil,
 		Sorts:       nil,
@@ -86,13 +87,12 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 
 	db, err := client.Database.Query(context.Background(), database["projects"], &dbRequest)
 	if err != nil {
-		return err
+		return projectsResponse, err
 	}
 
 	if len(db.Results) > 0 {
-		var projects []rami.Project
 		for _, r := range db.Results {
-			projects = append(projects, rami.Project{
+			projectsResponse.AllProjects = append(projectsResponse.AllProjects, rami.Project{
 				UUID:           string(r.ID),
 				ID:             ProcessRichTextProperty(&r, "ID"),
 				Title:          r.Properties["Title"].(*notionapi.TitleProperty).Title[0].Text.Content,
@@ -105,11 +105,12 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 				Transcript:     processTranscript(&r, transcripts),
 			})
 		}
-		fmt.Printf("%+v\n", projects)
+		//fmt.Printf("%+v\n", projects)
 		//fmt.Printf("len %d\n", len(projects))
 	}
 
-	return nil
+	projectsResponse.LastRefreshed = time.Now().String()
+	return projectsResponse, nil
 }
 
 func ProcessTags(page *notionapi.Page) (tags []rami.Tag) {
@@ -130,7 +131,7 @@ func ProcessYears(page *notionapi.Page) (year string) {
 
 func ProcessThumbnail(page *notionapi.Page) (thumbnailUrl string) {
 	if filesProperty, ok := page.Properties["Thumbnail"].(*notionapi.FilesProperty); ok {
-		thumbnailUrl = filesProperty.Files[0].File.URL
+		thumbnailUrl, _ = url.PathUnescape(filesProperty.Files[0].File.URL)
 	}
 
 	return thumbnailUrl
@@ -165,7 +166,6 @@ func processHomePageAsset(page *notionapi.Page, assets []rami.HomePageAsset) (ho
 
 func processTranscript(page *notionapi.Page, transcripts []rami.Transcript) (transcript rami.Transcript) {
 	if relationProperty, ok := page.Properties["Transcript"].(*notionapi.RelationProperty); ok {
-		fmt.Println(">>>", relationProperty)
 		if len(relationProperty.Relation) > 0 {
 			for _, t := range transcripts {
 				if t.UUID == string(relationProperty.Relation[0].ID) {

@@ -1,6 +1,8 @@
 package rami
 
-import "github.com/jomei/notionapi"
+import (
+	"github.com/jomei/notionapi"
+)
 
 type Transcript struct {
 	UUID        string   `json:"uuid,omitempty"`
@@ -27,4 +29,9 @@ type Project struct {
 	Description    string        `json:"description,omitempty"`
 	HomePageAssets HomePageAsset `json:"homePageAssets,omitempty"`
 	Transcript     Transcript    `json:"transcript,omitempty"`
+}
+
+type ProjectsResponse struct {
+	LastRefreshed string    `json:"lastRefreshed"`
+	AllProjects   []Project `json:"allProjects"`
 }
