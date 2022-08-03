@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -21,7 +22,13 @@ func main() {
 		port = "3000"
 	}
 
-	API := api.New()
+	ctx := context.Background()
+	notionAPIKey := os.Getenv("NOTION_API_KEY")
+
+	API, err := api.NewAPI(notionAPIKey, ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

@@ -1,4 +1,4 @@
-package notion
+package api
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 
 // Rate request per second to notion API
 const Rate uint64 = 3
+const Limit = time.Second / 3
 
 var database = map[string]notionapi.DatabaseID{
 	"projects":    notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"),

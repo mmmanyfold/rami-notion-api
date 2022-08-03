@@ -1,4 +1,4 @@
-package notion
+package api
 
 import (
 	"context"
@@ -18,13 +18,12 @@ type RateLimiter struct {
 	store    limiter.Store
 }
 
-func NewRateLimiter(ctx context.Context, key string, tokens uint64, debug bool) (*RateLimiter, error) {
+func NewRateLimiter(ctx context.Context, key string, tokens uint64, interval time.Duration, debug bool) (*RateLimiter, error) {
 	store, err := memorystore.New(&memorystore.Config{
 		Tokens:   tokens,
-		Interval: time.Second / 3,
+		Interval: interval,
 	})
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 
@@ -32,14 +31,13 @@ func NewRateLimiter(ctx context.Context, key string, tokens uint64, debug bool) 
 		ctx:      ctx,
 		key:      key,
 		limit:    tokens,
-		Interval: time.Second / 3,
 		store:    store,
 		debug:    debug,
+		Interval: interval,
 	}, nil
 }
 
 func (rl *RateLimiter) Take() (ok bool, remaining uint64, err error) {
-	fmt.Printf("--- fetching: %s\n", rl.key)
 	limit, remaining, reset, ok, err := rl.store.Take(rl.ctx, rl.key)
 	if err != nil {
 		log.Fatal(err)
@@ -47,6 +45,7 @@ func (rl *RateLimiter) Take() (ok bool, remaining uint64, err error) {
 	}
 
 	if rl.debug {
+		fmt.Println("fetching: ", rl.key)
 		fmt.Println("limit: ", limit)
 		fmt.Println("remaining: ", remaining)
 		fmt.Println("reset: ", reset)
@@ -57,12 +56,10 @@ func (rl *RateLimiter) Take() (ok bool, remaining uint64, err error) {
 	return ok, remaining, nil
 }
 
-func (rl *RateLimiter) Burst(requests uint64) {
-	//count := make()
-}
-
 func (rl *RateLimiter) Idle() {
-	fmt.Println("idling...")
+	if rl.debug {
+		fmt.Println("idling...")
+	}
 	time.Sleep(time.Second)
 }
 
