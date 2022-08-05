@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jomei/notionapi"
 	"github.com/mmmanyfold/rami-notion-api/pkg/notion"
+	"log"
 	"net/http"
 )
 
@@ -26,12 +27,14 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 
 	_, _, err = rateLimiter.Take()
 	if err != nil {
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	transcripts, err := notion.GetTranscripts(api.notionClient)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, fmt.Sprintf("failed to retrieve Transcripts from notion API"), http.StatusInternalServerError)
 		return
 	}
@@ -39,6 +42,7 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 	//_, _, _ = rateLimiter.Take()
 	assets, err := notion.GetHomePageAssets(api.notionClient)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, fmt.Sprintf("failed to retrieve HomePageAssets from notion API"), http.StatusInternalServerError)
 		return
 	}
@@ -46,6 +50,7 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 	//_, _, _ = rateLimiter.Take()
 	projects, err := notion.GetProjects(api.notionClient, assets, transcripts)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
 		return
 	}
@@ -59,6 +64,7 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false) // don't encode <, >, &
 	if err := encoder.Encode(projects); err != nil {
+		log.Println(err)
 		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
 		return
 	}
