@@ -60,10 +60,13 @@ func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, e
 
 	if len(db.Results) > 0 {
 		for _, r := range db.Results {
+			asset := rami.HomePageAsset{
+				UUID: string(r.ID),
+			}
+			if selectProperty, ok := r.Properties["File Type"].(*notionapi.SelectProperty); ok {
+				asset.Type = selectProperty.Select.Name
+			}
 			if len(r.Properties["File"].(*notionapi.FilesProperty).Files) > 0 {
-				asset := rami.HomePageAsset{
-					UUID: string(r.ID),
-				}
 				if len(r.Properties["File"].(*notionapi.FilesProperty).Files) > 0 {
 					for _, f := range r.Properties["File"].(*notionapi.FilesProperty).Files {
 						asset.Files = append(asset.Files, f)
@@ -71,7 +74,6 @@ func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, e
 				}
 				assets = append(assets, asset)
 			}
-
 		}
 	}
 
@@ -154,11 +156,17 @@ func processHomePageAsset(page *notionapi.Page, assets []rami.HomePageAsset) (ho
 	if relationProperty, ok := page.Properties["Homepage Assets"].(*notionapi.RelationProperty); ok {
 		for _, asset := range assets {
 			if asset.UUID == string(relationProperty.Relation[0].ID) {
+				var urls []string
+				for _, u := range asset.Files {
+					urls = append(urls, u.File.URL)
+				}
 				homePageAssets = rami.HomePageAsset{
-					UUID:  asset.UUID,
-					Files: asset.Files,
+					UUID: asset.UUID,
+					Urls: urls,
+					Type: asset.Type,
 				}
 			}
+
 		}
 	}
 

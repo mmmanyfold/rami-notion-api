@@ -11,8 +11,10 @@ type Transcript struct {
 }
 
 type HomePageAsset struct {
-	UUID  string           `json:"uuid,omitempty"`
 	Files []notionapi.File `json:"files,omitempty"`
+	UUID  string           `json:"uuid,omitempty"`
+	Type  string           `json:"type"`
+	Urls  []string         `json:"urls"`
 }
 
 type Tag string
@@ -20,7 +22,7 @@ type Tag string
 type Project struct {
 	UUID           string        `json:"uuid,omitempty"`
 	ID             string        `json:"id,omitempty"`
-	Title          string        `json:"name" json:"title,omitempty"`
+	Title          string        `json:"title" json:"title,omitempty"`
 	Tags           []Tag         `json:"tags,omitempty"`
 	Year           string        `json:"year,omitempty"`
 	Thumbnail      string        `json:"thumbnail,omitempty"`
