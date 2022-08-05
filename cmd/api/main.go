@@ -56,7 +56,7 @@ func main() {
 	})
 
 	r.Route("/api", func(r chi.Router) {
-		r.Post("/sync", API.Sync)
+		r.Get("/sync", API.Sync)
 	})
 
 	log.Println(fmt.Printf("running on port: %s\n", port))

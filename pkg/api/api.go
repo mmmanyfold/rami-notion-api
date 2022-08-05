@@ -32,20 +32,18 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 
 	transcripts, err := notion.GetTranscripts(api.notionClient)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to retrieve HomePageAssets from notion API"), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("failed to retrieve Transcripts from notion API"), http.StatusInternalServerError)
 		return
 	}
 
-	//time.Sleep(time.Second)
-
+	//_, _, _ = rateLimiter.Take()
 	assets, err := notion.GetHomePageAssets(api.notionClient)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to retrieve HomePageAssets from notion API"), http.StatusInternalServerError)
 		return
 	}
 
-	//time.Sleep(time.Second)
-
+	//_, _, _ = rateLimiter.Take()
 	projects, err := notion.GetProjects(api.notionClient, assets, transcripts)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)

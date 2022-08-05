@@ -5,10 +5,11 @@ test:
 	go test -v ./...
 
 build:
-	docker build -t rami-notion-api .
+	docker build -t rami-notion-api --build-arg NOTION_API_KEY .
 
 deploy:
-	echo "Deploying..."
+	fly deploy \
+        --build-secret NOTION_API_KEY=${NOTION_API_KEY}
 
 run:
 	go run ./cmd/api/main.go

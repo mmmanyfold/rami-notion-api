@@ -18,6 +18,8 @@ var database = map[string]notionapi.DatabaseID{
 	"transcripts": notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
 }
 
+type notion struct{}
+
 func GetTranscripts(client *notionapi.Client) (transcripts []rami.Transcript, err error) {
 	dbRequest := notionapi.DatabaseQueryRequest{
 		Filter:      nil,
