@@ -23,4 +23,8 @@ check:
 dev:
 	reflex -c reflex.conf
 
-.PHONY: deps test build deploy run fmt check dev
+clean:
+	@echo "clearing test cache"
+	go clean -testcache
+
+.PHONY: deps test build deploy run fmt check dev clean
