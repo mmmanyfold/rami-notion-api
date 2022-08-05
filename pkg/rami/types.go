@@ -31,6 +31,7 @@ type Project struct {
 	Description    string        `json:"description,omitempty"`
 	HomePageAssets HomePageAsset `json:"homePageAssets,omitempty"`
 	Transcript     Transcript    `json:"transcript,omitempty"`
+	Slug           string        `json:"slug,omitempty"`
 }
 
 type ProjectsResponse struct {

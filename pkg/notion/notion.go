@@ -95,10 +95,12 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 
 	if len(db.Results) > 0 {
 		for _, r := range db.Results {
+			title := ProcessTitle(&r)
+			id := ProcessRichTextProperty(&r, "ID")
 			projectsResponse.AllProjects = append(projectsResponse.AllProjects, rami.Project{
 				UUID:           string(r.ID),
-				ID:             ProcessRichTextProperty(&r, "ID"),
-				Title:          r.Properties["Title"].(*notionapi.TitleProperty).Title[0].Text.Content,
+				ID:             id,
+				Title:          title,
 				Tags:           ProcessTags(&r),
 				Year:           ProcessYears(&r),
 				Thumbnail:      ProcessThumbnail(&r),
@@ -106,6 +108,7 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 				Description:    ProcessRichTextProperty(&r, "Description"),
 				HomePageAssets: processHomePageAsset(&r, assets),
 				Transcript:     processTranscript(&r, transcripts),
+				Slug:           id + "-" + Slug(title),
 			})
 		}
 		//fmt.Printf("%+v\n", projects)
@@ -114,6 +117,14 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 
 	projectsResponse.LastRefreshed = time.Now().String()
 	return projectsResponse, nil
+}
+
+func ProcessTitle(page *notionapi.Page) (title string) {
+	if titleProperty, ok := page.Properties["Title"].(*notionapi.TitleProperty); ok {
+		title = titleProperty.Title[0].Text.Content
+	}
+
+	return title
 }
 
 func ProcessTags(page *notionapi.Page) (tags []rami.Tag) {
