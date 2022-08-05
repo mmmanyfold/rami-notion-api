@@ -97,31 +97,34 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 
 	if len(db.Results) > 0 {
 		for _, r := range db.Results {
-			title := ProcessTitle(&r)
-			id := ProcessRichTextProperty(&r, "ID")
+			title := processTitle(&r)
+			id := processRichTextProperty(&r, "ID")
 			projectsResponse.AllProjects = append(projectsResponse.AllProjects, rami.Project{
 				UUID:           string(r.ID),
 				ID:             id,
 				Title:          title,
-				Tags:           ProcessTags(&r),
-				Year:           ProcessYears(&r),
-				Thumbnail:      ProcessThumbnail(&r),
-				Medium:         ProcessRichTextProperty(&r, "Medium"),
-				Description:    ProcessRichTextProperty(&r, "Description"),
+				Tags:           processTags(&r),
+				Year:           processYears(&r),
+				Thumbnail:      processThumbnail(&r),
+				Medium:         processRichTextProperty(&r, "Medium"),
+				Description:    processRichTextProperty(&r, "Description"),
 				HomePageAssets: processHomePageAsset(&r, assets),
 				Transcript:     processTranscript(&r, transcripts),
 				Slug:           id + "-" + Slug(title),
 			})
 		}
-		//fmt.Printf("%+v\n", projects)
-		//fmt.Printf("len %d\n", len(projects))
 	}
+
+	return projectsResponse, nil
+}
+
+func GetProjectsAndDenormalize(client *notionapi.Client, assets []rami.HomePageAsset, transcripts []rami.Transcript) (projectsResponse rami.ProjectsResponse, err error) {
 
 	projectsResponse.LastRefreshed = time.Now().String()
 	return projectsResponse, nil
 }
 
-func ProcessTitle(page *notionapi.Page) (title string) {
+func processTitle(page *notionapi.Page) (title string) {
 	if titleProperty, ok := page.Properties["Title"].(*notionapi.TitleProperty); ok {
 		title = titleProperty.Title[0].Text.Content
 	}
@@ -129,7 +132,7 @@ func ProcessTitle(page *notionapi.Page) (title string) {
 	return title
 }
 
-func ProcessTags(page *notionapi.Page) (tags []rami.Tag) {
+func processTags(page *notionapi.Page) (tags []rami.Tag) {
 	if multiSelectProperty, ok := page.Properties["Tags"].(*notionapi.MultiSelectProperty); ok {
 		for _, t := range multiSelectProperty.MultiSelect {
 			tags = append(tags, rami.Tag(t.Name))
@@ -138,14 +141,14 @@ func ProcessTags(page *notionapi.Page) (tags []rami.Tag) {
 	return tags
 }
 
-func ProcessYears(page *notionapi.Page) (year string) {
+func processYears(page *notionapi.Page) (year string) {
 	if selectProperty, ok := page.Properties["Year"].(*notionapi.SelectProperty); ok {
 		year = selectProperty.Select.Name
 	}
 	return year
 }
 
-func ProcessThumbnail(page *notionapi.Page) (thumbnailUrl string) {
+func processThumbnail(page *notionapi.Page) (thumbnailUrl string) {
 	if filesProperty, ok := page.Properties["Thumbnail"].(*notionapi.FilesProperty); ok {
 		thumbnailUrl, _ = url.PathUnescape(filesProperty.Files[0].File.URL)
 	}
@@ -153,7 +156,7 @@ func ProcessThumbnail(page *notionapi.Page) (thumbnailUrl string) {
 	return thumbnailUrl
 }
 
-func ProcessRichTextProperty(page *notionapi.Page, field string) (text string) {
+func processRichTextProperty(page *notionapi.Page, field string) (text string) {
 	if textProperty, ok := page.Properties[field].(*notionapi.RichTextProperty); ok {
 		for _, rt := range textProperty.RichText {
 			if len(textProperty.RichText) > 0 {

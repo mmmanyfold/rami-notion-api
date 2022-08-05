@@ -12,5 +12,6 @@ require (
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
+	github.com/liyaojian/cache v0.0.0-20220121124504-b978a1a38253 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 )
