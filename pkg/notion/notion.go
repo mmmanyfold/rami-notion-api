@@ -5,6 +5,7 @@ import (
 	"github.com/jomei/notionapi"
 	"github.com/mmmanyfold/rami-notion-api/pkg/rami"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -129,7 +130,8 @@ func processTitle(page *notionapi.Page) (title string) {
 func processTags(page *notionapi.Page) (tags []rami.Tag) {
 	if multiSelectProperty, ok := page.Properties["Tags"].(*notionapi.MultiSelectProperty); ok {
 		for _, t := range multiSelectProperty.MultiSelect {
-			tags = append(tags, rami.Tag(t.Name))
+			lowerT := strings.ToLower(t.Name)
+			tags = append(tags, rami.Tag(lowerT))
 		}
 	}
 	return tags
