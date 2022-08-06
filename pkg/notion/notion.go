@@ -2,8 +2,10 @@ package notion
 
 import (
 	"context"
+	"fmt"
 	"github.com/jomei/notionapi"
 	"github.com/mmmanyfold/rami-notion-api/pkg/rami"
+	"github.com/pkg/errors"
 	"net/url"
 	"strings"
 	"time"
@@ -34,6 +36,17 @@ func GetTranscripts(client *notionapi.Client) (transcripts []rami.Transcript, er
 			transcript.UUID = string(r.ID)
 			if projectRelationProperty, ok := r.Properties["Project"].(*notionapi.RelationProperty); ok {
 				transcript.ProjectUUID = string(projectRelationProperty.ID)
+				pagination := notionapi.Pagination{
+					StartCursor: "",
+					PageSize:    0,
+				}
+				pageBlocks, err := client.Block.GetChildren(context.TODO(), notionapi.BlockID(transcript.UUID), &pagination)
+				if err != nil {
+					errMessage := fmt.Sprintf("failed to get transcript blocks for page id: %s", transcript.UUID)
+					fmt.Println(errors.Wrap(err, errMessage))
+					break
+				}
+				transcript.Blocks = pageBlocks.Results
 			}
 			transcripts = append(transcripts, transcript)
 		}
@@ -114,7 +127,6 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 }
 
 func GetProjectsAndDenormalize(client *notionapi.Client, assets []rami.HomePageAsset, transcripts []rami.Transcript) (projectsResponse rami.ProjectsResponse, err error) {
-
 	projectsResponse.LastRefreshed = time.Now().String()
 	return projectsResponse, nil
 }

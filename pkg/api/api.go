@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/jomei/notionapi"
@@ -22,16 +21,6 @@ func NewAPI(notionAPIKey string) (*API, error) {
 }
 
 func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-	rateLimiter, err := notion.NewRateLimiter(ctx, "projects", notion.Rate, notion.Limit, true)
-
-	_, _, err = rateLimiter.Take()
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	transcripts, err := notion.GetTranscripts(api.notionClient)
 	if err != nil {
 		log.Println(err)
@@ -39,7 +28,6 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//_, _, _ = rateLimiter.Take()
 	assets, err := notion.GetHomePageAssets(api.notionClient)
 	if err != nil {
 		log.Println(err)
@@ -47,16 +35,9 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//_, _, _ = rateLimiter.Take()
 	projects, err := notion.GetProjects(api.notionClient, assets, transcripts)
 	if err != nil {
-		log.Println(err)
 		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
-		return
-	}
-
-	if err := rateLimiter.Close(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

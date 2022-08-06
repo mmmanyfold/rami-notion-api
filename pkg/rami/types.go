@@ -5,9 +5,9 @@ import (
 )
 
 type Transcript struct {
-	UUID        string   `json:"uuid,omitempty"`
-	ProjectUUID string   `json:"ProjectUUID,omitempty"`
-	Blocks      []string `json:"blocks,omitempty"`
+	UUID        string            `json:"uuid,omitempty"`
+	ProjectUUID string            `json:"ProjectUUID,omitempty"`
+	Blocks      []notionapi.Block `json:"blocks,omitempty"`
 }
 
 type File struct {
