@@ -10,11 +10,17 @@ type Transcript struct {
 	Blocks      []string `json:"blocks,omitempty"`
 }
 
+type File struct {
+	Url    string `json:"url,omitempty"`
+	Width  uint64 `json:"width,omitempty"`
+	Height uint64 `json:"height,omitempty"`
+}
+
 type HomePageAsset struct {
-	Files []notionapi.File `json:"files,omitempty"`
-	UUID  string           `json:"uuid,omitempty"`
-	Type  string           `json:"type"`
-	Urls  []string         `json:"urls"`
+	NotionFiles []notionapi.File `json:"notionFiles,omitempty"`
+	UUID        string           `json:"uuid,omitempty"`
+	Type        string           `json:"type,omitempty"`
+	Files       []File           `json:"files,omitempty"`
 }
 
 type Tag string

@@ -8,17 +8,11 @@ import (
 	"time"
 )
 
-// Rate request per second to notion API
-const Rate uint64 = 3
-const Limit = time.Second / 3
-
 var database = map[string]notionapi.DatabaseID{
 	"projects":    notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"),
 	"homepage":    notionapi.DatabaseID("a79aece399014bc282a27024de23464a"),
 	"transcripts": notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
 }
-
-type notion struct{}
 
 func GetTranscripts(client *notionapi.Client) (transcripts []rami.Transcript, err error) {
 	dbRequest := notionapi.DatabaseQueryRequest{
@@ -71,7 +65,7 @@ func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, e
 			if len(r.Properties["File"].(*notionapi.FilesProperty).Files) > 0 {
 				if len(r.Properties["File"].(*notionapi.FilesProperty).Files) > 0 {
 					for _, f := range r.Properties["File"].(*notionapi.FilesProperty).Files {
-						asset.Files = append(asset.Files, f)
+						asset.NotionFiles = append(asset.NotionFiles, f)
 					}
 				}
 				assets = append(assets, asset)
@@ -172,14 +166,36 @@ func processHomePageAsset(page *notionapi.Page, assets []rami.HomePageAsset) (ho
 	if relationProperty, ok := page.Properties["Homepage Assets"].(*notionapi.RelationProperty); ok {
 		for _, asset := range assets {
 			if asset.UUID == string(relationProperty.Relation[0].ID) {
-				var urls []string
-				for _, u := range asset.Files {
-					urls = append(urls, u.File.URL)
+				var files []rami.File
+				for _, u := range asset.NotionFiles {
+					s3Url := u.File.URL
+					//if asset.Type == "Image" {
+					//path, err := image.Download(s3Url)
+					//if err != nil {
+					//	log.Println(err)
+					//}
+					//w, h, err := image.Size(path)
+					//if err != nil {
+					//	log.Println(err)
+					//}
+					//files = append(files, rami.File{
+					//	Url: s3Url,
+					//	Width: w,
+					//	Height: h,
+					//})
+					//} else {
+					//	files = append(files, rami.File{
+					//		Url: s3Url,
+					//	})
+					//}
+					files = append(files, rami.File{
+						Url: s3Url,
+					})
 				}
 				homePageAssets = rami.HomePageAsset{
-					UUID: asset.UUID,
-					Urls: urls,
-					Type: asset.Type,
+					UUID:  asset.UUID,
+					Files: files,
+					Type:  asset.Type,
 				}
 			}
 

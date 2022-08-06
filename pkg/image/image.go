@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func Size(imgPath string) (w int, h int, error error) {
+func Size(imgPath string) (w uint64, h uint64, error error) {
 	file, err := os.Open(imgPath)
 	if err != nil {
 		return w, h, err
@@ -21,7 +21,8 @@ func Size(imgPath string) (w int, h int, error error) {
 	if err != nil {
 		return w, h, err
 	}
-	return img.Width, img.Height, nil
+
+	return uint64(img.Width), uint64(img.Height), nil
 }
 
 func Download(url string) (path string, err error) {
@@ -32,7 +33,7 @@ func Download(url string) (path string, err error) {
 	}
 	defer response.Body.Close()
 
-	file, err := ioutil.TempFile("/tmp/", "img.*")
+	file, err := ioutil.TempFile("/tmp/", "img-*.png")
 	if err != nil {
 		return path, err
 	}

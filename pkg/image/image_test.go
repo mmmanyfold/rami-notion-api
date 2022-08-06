@@ -16,8 +16,8 @@ func Test_imageSize(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantW   int
-		wantH   int
+		wantW   uint64
+		wantH   uint64
 		wantErr bool
 	}{{
 		name: "image size jpg",
@@ -53,8 +53,8 @@ func TestDownloadAndSize(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		wantW   int
-		wantH   int
+		wantW   uint64
+		wantH   uint64
 	}{
 		{
 			name: "download image from internet and determine size",
