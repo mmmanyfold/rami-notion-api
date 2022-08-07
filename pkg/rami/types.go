@@ -44,3 +44,13 @@ type ProjectsResponse struct {
 	LastRefreshed string    `json:"lastRefreshed"`
 	AllProjects   []Project `json:"allProjects"`
 }
+
+type Info struct {
+	UUID        string `json:"uuid,omitempty"`
+	ProjectUUID string `json:"ProjectUUID,omitempty"`
+}
+
+type InfoResponse struct {
+	LastRefreshed string    `json:"lastRefreshed"`
+	AllInfo       []Project `json:"allProjects"`
+}

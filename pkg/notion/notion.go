@@ -8,14 +8,42 @@ import (
 	"github.com/pkg/errors"
 	"net/url"
 	"strings"
-	"time"
 )
 
 var database = map[string]notionapi.DatabaseID{
-	"projects":    notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"),
-	"homepage":    notionapi.DatabaseID("a79aece399014bc282a27024de23464a"),
-	"transcripts": notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
+	"projects":                     notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"), // endpoint
+	"homepage":                     notionapi.DatabaseID("a79aece399014bc282a27024de23464a"),
+	"transcripts":                  notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
+	"info":                         notionapi.DatabaseID("74db7bbeb10b41dca217d55e9a675e3e"), // endpoint
+	"cv - exhibitions & screening": notionapi.DatabaseID("9090f44a583049d7a7fa478b2dd329a8"), // endpoint
+	"cv - additional":              notionapi.DatabaseID("78403af9f31145ce98c7a9ffa57931f8"), // endpoint
 }
+
+//func GetInfo(client *notionapi.Client) (infos []rami.Info, err error){
+//	dbRequest := notionapi.DatabaseQueryRequest{
+//		Filter:      nil,
+//		Sorts:       nil,
+//		StartCursor: "",
+//		PageSize:    0,
+//	}
+//	db, err := client.Database.Query(context.Background(), database["info"], &dbRequest)
+//	if err != nil {
+//		return infos, err
+//	}
+//
+//	if len(db.Results) > 0 {
+//		for _, r := range db.Results {
+//			var info rami.Info
+//			info.UUID = string(r.ID)
+//			if projectRelationProperty, ok := r.Properties["Project"].(*notionapi.RelationProperty); ok {
+//				info.ProjectUUID = string(projectRelationProperty.ID)
+//			}
+//			infos = append(infos, info)
+//		}
+//	}
+//
+//	return info, nil
+//}
 
 func GetTranscripts(client *notionapi.Client) (transcripts []rami.Transcript, err error) {
 	dbRequest := notionapi.DatabaseQueryRequest{
@@ -123,11 +151,6 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 		}
 	}
 
-	return projectsResponse, nil
-}
-
-func GetProjectsAndDenormalize(client *notionapi.Client, assets []rami.HomePageAsset, transcripts []rami.Transcript) (projectsResponse rami.ProjectsResponse, err error) {
-	projectsResponse.LastRefreshed = time.Now().String()
 	return projectsResponse, nil
 }
 

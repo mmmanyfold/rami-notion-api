@@ -20,6 +20,15 @@ func NewAPI(notionAPIKey string) (*API, error) {
 	}, nil
 }
 
+func (api *API) Info(w http.ResponseWriter, r *http.Request) {
+	//info, err := notion.GetInfo(api.notionClient)
+	//if err != nil {
+	//	log.Println(err)
+	//	http.Error(w, fmt.Sprintf("failed to retrieve Info from notion API"), http.StatusInternalServerError)
+	//	return
+	//}
+}
+
 func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 	transcripts, err := notion.GetTranscripts(api.notionClient)
 	if err != nil {
