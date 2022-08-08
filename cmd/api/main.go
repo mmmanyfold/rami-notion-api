@@ -55,6 +55,10 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 
+	// server static files under public
+	fs := http.FileServer(http.Dir("public"))
+	r.Handle("/public/*", http.StripPrefix("/public/", fs))
+
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/sync", API.Sync)
 		r.Get("/db/{id}", API.GetDB)
