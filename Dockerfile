@@ -35,9 +35,10 @@ WORKDIR /home/app
 
 COPY --from=builder /go/bin/api ./api
 RUN chmod +x ./api
-RUN mkdir "public"
 
 USER app
+
+RUN mkdir "public"
 
 ARG PORT
 ENV PORT ${PORT:-8080}
