@@ -1,12 +1,14 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/jomei/notionapi"
 	"github.com/mmmanyfold/rami-notion-api/pkg/notion"
 	"github.com/mmmanyfold/rami-notion-api/pkg/rami"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -60,11 +62,15 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		encoder := json.NewEncoder(w)
 		encoder.SetEscapeHTML(false) // don't encode <, >, &
-		if err := encoder.Encode(rami.ProjectsResponse{
+		payload := rami.ProjectsResponse{
 			LastRefreshed: Timestamp(),
 			Rows:          rows,
-		}); err != nil {
-			log.Println(err)
+		}
+		if err := writeToFile("projects.json", payload); err != nil {
+			http.Error(w, fmt.Sprintf("failed to persist json response to disk"), http.StatusInternalServerError)
+			return
+		}
+		if err := encoder.Encode(payload); err != nil {
 			http.Error(w, fmt.Sprintf("failed to json encode Projects response"), http.StatusInternalServerError)
 			return
 		}
@@ -76,10 +82,15 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		encoder.SetEscapeHTML(false) // don't encode <, >, &
-		if err := encoder.Encode(rami.CVAdditionalResponse{
+		payload := rami.CVAdditionalResponse{
 			LastRefreshed: Timestamp(),
 			Rows:          rows,
-		}); err != nil {
+		}
+		if err := writeToFile("cv-additional.json", payload); err != nil {
+			http.Error(w, fmt.Sprintf("failed to persist json response to disk"), http.StatusInternalServerError)
+			return
+		}
+		if err := encoder.Encode(payload); err != nil {
 			log.Println(err)
 			http.Error(w, fmt.Sprintf("failed to json encode GetCVAdditionalDB response"), http.StatusInternalServerError)
 			return
@@ -94,4 +105,22 @@ func Timestamp() string {
 	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
 		n.Year(), n.Month(), n.Day(),
 		n.Hour(), n.Minute(), n.Second())
+}
+
+func writeToFile(filename string, jsonData interface{}) error {
+	buf := new(bytes.Buffer)
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	filepath := fmt.Sprintf("./public/%s", filename)
+
+	if err := enc.Encode(&jsonData); err != nil {
+		log.Println(err)
+	}
+
+	err := ioutil.WriteFile(filepath, buf.Bytes(), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

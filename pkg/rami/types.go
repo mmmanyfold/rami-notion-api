@@ -42,7 +42,7 @@ type Project struct {
 
 type ProjectsResponse struct {
 	LastRefreshed string    `json:"lastRefreshed"`
-	Rows          []Project `json:"allProjects"`
+	Rows          []Project `json:"rows"`
 }
 
 type Info struct {
