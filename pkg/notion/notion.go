@@ -10,13 +10,13 @@ import (
 	"strings"
 )
 
-var database = map[string]notionapi.DatabaseID{
-	"projects":                     notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"), // endpoint
+var Databases = map[string]notionapi.DatabaseID{
+	"projects":                     notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"), // resource
 	"homepage":                     notionapi.DatabaseID("a79aece399014bc282a27024de23464a"),
 	"transcripts":                  notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
-	"info":                         notionapi.DatabaseID("74db7bbeb10b41dca217d55e9a675e3e"), // endpoint
-	"cv - exhibitions & screening": notionapi.DatabaseID("9090f44a583049d7a7fa478b2dd329a8"), // endpoint
-	"cv - additional":              notionapi.DatabaseID("78403af9f31145ce98c7a9ffa57931f8"), // endpoint
+	"info":                         notionapi.DatabaseID("74db7bbeb10b41dca217d55e9a675e3e"), // resource
+	"cv-exhibitions-and-screening": notionapi.DatabaseID("9090f44a583049d7a7fa478b2dd329a8"), // resource
+	"cv-additional":                notionapi.DatabaseID("78403af9f31145ce98c7a9ffa57931f8"), // resource
 }
 
 func GetCVAdditionalDB(client *notionapi.Client) (rows []rami.CVAdditional, err error) {
@@ -27,7 +27,7 @@ func GetCVAdditionalDB(client *notionapi.Client) (rows []rami.CVAdditional, err 
 		PageSize:    0,
 	}
 
-	db, err := client.Database.Query(context.Background(), database["cv - additional"], &dbRequest)
+	db, err := client.Database.Query(context.Background(), Databases["cv-additional"], &dbRequest)
 	if err != nil {
 		return rows, err
 	}
@@ -58,7 +58,7 @@ func GetTranscripts(client *notionapi.Client) (transcripts []rami.Transcript, er
 		PageSize:    0,
 	}
 
-	db, err := client.Database.Query(context.Background(), database["transcripts"], &dbRequest)
+	db, err := client.Database.Query(context.Background(), Databases["transcripts"], &dbRequest)
 	if err != nil {
 		return transcripts, err
 	}
@@ -96,7 +96,7 @@ func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, e
 		PageSize:    0,
 	}
 
-	db, err := client.Database.Query(context.Background(), database["homepage"], &dbRequest)
+	db, err := client.Database.Query(context.Background(), Databases["homepage"], &dbRequest)
 	if err != nil {
 		return assets, err
 	}
@@ -131,7 +131,7 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 		PageSize:    0,
 	}
 
-	db, err := client.Database.Query(context.Background(), database["projects"], &dbRequest)
+	db, err := client.Database.Query(context.Background(), Databases["projects"], &dbRequest)
 	if err != nil {
 		return rows, err
 	}

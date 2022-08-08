@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 	"github.com/mmmanyfold/rami-notion-api/pkg/api"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -60,12 +61,39 @@ func main() {
 	r.Handle("/public/*", http.StripPrefix("/public/", fs))
 
 	r.Route("/api", func(r chi.Router) {
-		r.Get("/sync", API.Sync)
-		r.Get("/db/{id}", API.GetDB)
+		r.Route("/sync", func(r chi.Router) {
+			r.Get("/db/{name}", API.Sync)
+		})
 	})
+
+	go scheduleNotionAPISync(port)
 
 	log.Println(fmt.Printf("running on port: %s\n", port))
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), r); err != nil {
 		panic(err)
+	}
+}
+
+func scheduleNotionAPISync(port string) {
+	everyHalfHour := time.NewTicker(30 * time.Minute)
+	for {
+		select {
+		case <-everyHalfHour.C:
+			log.Println("worker::syncing::notion::databases")
+			response, err := http.Get(fmt.Sprintf("http://0.0.0.0:%s/api/sync/db/projects", port))
+			if err != nil {
+				log.Fatalf("failed to retrieve projects from Notion API, err: %v\n", err)
+			}
+			file, err := os.Create("./public/projects.json")
+			if err != nil {
+				log.Fatalf("failed to create file for storing projects response from Notion API, err: %v\n", err)
+			}
+
+			_, err = io.Copy(file, response.Body)
+			if err != nil {
+				log.Fatalf("failed to store file for storing projects response from Notion API, err: %v\n", err)
+			}
+			defer response.Body.Close()
+		}
 	}
 }

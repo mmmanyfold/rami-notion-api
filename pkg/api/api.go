@@ -23,20 +23,52 @@ func NewAPI(notionAPIKey string) (*API, error) {
 	}, nil
 }
 
-func (api *API) GetDB(w http.ResponseWriter, r *http.Request) {
-	dbID := chi.URLParam(r, "id")
-	if dbID == "" {
+func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
+	if name == "" {
 		http.Error(w, fmt.Sprintf("failed, db id URL param not found"), http.StatusNotFound)
 		return
 	}
 
-	fmt.Printf("requesting db: %s\n", dbID)
+	fmt.Printf("requesting db: %s\n", name)
 
 	encoder := json.NewEncoder(w)
 
 	// TODO: build mapping from db-id value to name of db
-	switch dbID {
-	case "78403af9f31145ce98c7a9ffa57931f8":
+	switch name {
+	case "projects":
+		transcripts, err := notion.GetTranscripts(api.notionClient)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprintf("failed to retrieve Transcripts from notion API"), http.StatusInternalServerError)
+			return
+		}
+
+		assets, err := notion.GetHomePageAssets(api.notionClient)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprintf("failed to retrieve HomePageAssets from notion API"), http.StatusInternalServerError)
+			return
+		}
+
+		rows, err := notion.GetProjects(api.notionClient, assets, transcripts)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		encoder := json.NewEncoder(w)
+		encoder.SetEscapeHTML(false) // don't encode <, >, &
+		if err := encoder.Encode(rami.ProjectsResponse{
+			LastRefreshed: Timestamp(),
+			Rows:          rows,
+		}); err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprintf("failed to json encode Projects response"), http.StatusInternalServerError)
+			return
+		}
+	case "cv-additional":
 		rows, err := notion.GetCVAdditionalDB(api.notionClient)
 		if err != nil {
 			log.Println(err)
@@ -55,40 +87,6 @@ func (api *API) GetDB(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
-
-func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
-	transcripts, err := notion.GetTranscripts(api.notionClient)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, fmt.Sprintf("failed to retrieve Transcripts from notion API"), http.StatusInternalServerError)
-		return
-	}
-
-	assets, err := notion.GetHomePageAssets(api.notionClient)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, fmt.Sprintf("failed to retrieve HomePageAssets from notion API"), http.StatusInternalServerError)
-		return
-	}
-
-	rows, err := notion.GetProjects(api.notionClient, assets, transcripts)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to retrieve Projects from notion API"), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	encoder := json.NewEncoder(w)
-	encoder.SetEscapeHTML(false) // don't encode <, >, &
-	if err := encoder.Encode(rami.ProjectsResponse{
-		LastRefreshed: Timestamp(),
-		Rows:          rows,
-	}); err != nil {
-		log.Println(err)
-		http.Error(w, fmt.Sprintf("failed to json encode Projects response"), http.StatusInternalServerError)
-		return
-	}
 }
 
 func Timestamp() string {
