@@ -19,31 +19,36 @@ var database = map[string]notionapi.DatabaseID{
 	"cv - additional":              notionapi.DatabaseID("78403af9f31145ce98c7a9ffa57931f8"), // endpoint
 }
 
-//func GetInfo(client *notionapi.Client) (infos []rami.Info, err error){
-//	dbRequest := notionapi.DatabaseQueryRequest{
-//		Filter:      nil,
-//		Sorts:       nil,
-//		StartCursor: "",
-//		PageSize:    0,
-//	}
-//	db, err := client.Database.Query(context.Background(), database["info"], &dbRequest)
-//	if err != nil {
-//		return infos, err
-//	}
-//
-//	if len(db.Results) > 0 {
-//		for _, r := range db.Results {
-//			var info rami.Info
-//			info.UUID = string(r.ID)
-//			if projectRelationProperty, ok := r.Properties["Project"].(*notionapi.RelationProperty); ok {
-//				info.ProjectUUID = string(projectRelationProperty.ID)
-//			}
-//			infos = append(infos, info)
-//		}
-//	}
-//
-//	return info, nil
-//}
+func GetCVAdditionalDB(client *notionapi.Client) (rows []rami.CVAdditional, err error) {
+	dbRequest := notionapi.DatabaseQueryRequest{
+		Filter:      nil,
+		Sorts:       nil,
+		StartCursor: "",
+		PageSize:    0,
+	}
+
+	db, err := client.Database.Query(context.Background(), database["cv - additional"], &dbRequest)
+	if err != nil {
+		return rows, err
+	}
+
+	if len(db.Results) > 0 {
+		for _, r := range db.Results {
+			var row rami.CVAdditional
+			row.UUID = string(r.ID)
+			row.Title = processRichTextProperty(&r, "Title")
+			row.Description = processRichTextProperty(&r, "Description")
+			row.Detail = processRichTextProperty(&r, "Detail")
+			row.URL = processTitle(&r, "URL")
+			row.Tag = processTag(&r, "Tag")
+			// TODO: Download prop
+			// TODO: For Project Press page relation prop
+			rows = append(rows, row)
+		}
+	}
+
+	return rows, err
+}
 
 func GetTranscripts(client *notionapi.Client) (transcripts []rami.Transcript, err error) {
 	dbRequest := notionapi.DatabaseQueryRequest{
@@ -118,7 +123,7 @@ func GetHomePageAssets(client *notionapi.Client) (assets []rami.HomePageAsset, e
 	return assets, nil
 }
 
-func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcripts []rami.Transcript) (projectsResponse rami.ProjectsResponse, err error) {
+func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcripts []rami.Transcript) (rows []rami.Project, err error) {
 	dbRequest := notionapi.DatabaseQueryRequest{
 		Filter:      nil,
 		Sorts:       nil,
@@ -128,14 +133,14 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 
 	db, err := client.Database.Query(context.Background(), database["projects"], &dbRequest)
 	if err != nil {
-		return projectsResponse, err
+		return rows, err
 	}
 
 	if len(db.Results) > 0 {
 		for _, r := range db.Results {
-			title := processTitle(&r)
+			title := processTitle(&r, "Title")
 			id := processRichTextProperty(&r, "ID")
-			projectsResponse.AllProjects = append(projectsResponse.AllProjects, rami.Project{
+			rows = append(rows, rami.Project{
 				UUID:           string(r.ID),
 				ID:             id,
 				Title:          title,
@@ -151,12 +156,14 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 		}
 	}
 
-	return projectsResponse, nil
+	return rows, nil
 }
 
-func processTitle(page *notionapi.Page) (title string) {
-	if titleProperty, ok := page.Properties["Title"].(*notionapi.TitleProperty); ok {
-		title = titleProperty.Title[0].Text.Content
+func processTitle(page *notionapi.Page, field string) (title string) {
+	if titleProperty, ok := page.Properties[field].(*notionapi.TitleProperty); ok {
+		if len(titleProperty.Title) > 0 {
+			title = titleProperty.Title[0].Text.Content
+		}
 	}
 
 	return title
@@ -170,6 +177,13 @@ func processTags(page *notionapi.Page) (tags []rami.Tag) {
 		}
 	}
 	return tags
+}
+
+func processTag(page *notionapi.Page, field string) (tag string) {
+	if selectProperty, ok := page.Properties[field].(*notionapi.SelectProperty); ok {
+		tag = selectProperty.Select.Name
+	}
+	return tag
 }
 
 func processYears(page *notionapi.Page) (year string) {
@@ -206,25 +220,6 @@ func processHomePageAsset(page *notionapi.Page, assets []rami.HomePageAsset) (ho
 				var files []rami.File
 				for _, u := range asset.NotionFiles {
 					s3Url := u.File.URL
-					//if asset.Type == "Image" {
-					//path, err := image.Download(s3Url)
-					//if err != nil {
-					//	log.Println(err)
-					//}
-					//w, h, err := image.Size(path)
-					//if err != nil {
-					//	log.Println(err)
-					//}
-					//files = append(files, rami.File{
-					//	Url: s3Url,
-					//	Width: w,
-					//	Height: h,
-					//})
-					//} else {
-					//	files = append(files, rami.File{
-					//		Url: s3Url,
-					//	})
-					//}
 					files = append(files, rami.File{
 						Url: s3Url,
 					})

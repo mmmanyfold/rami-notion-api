@@ -42,7 +42,7 @@ type Project struct {
 
 type ProjectsResponse struct {
 	LastRefreshed string    `json:"lastRefreshed"`
-	AllProjects   []Project `json:"allProjects"`
+	Rows          []Project `json:"allProjects"`
 }
 
 type Info struct {
@@ -53,4 +53,18 @@ type Info struct {
 type InfoResponse struct {
 	LastRefreshed string    `json:"lastRefreshed"`
 	AllInfo       []Project `json:"allProjects"`
+}
+
+type CVAdditional struct {
+	UUID        string `json:"uuid,omitempty"`
+	Tag         string `json:"tag"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Detail      string `json:"detail"`
+	URL         string `json:"url"`
+}
+
+type CVAdditionalResponse struct {
+	LastRefreshed string         `json:"lastRefreshed"`
+	Rows          []CVAdditional `json:"rows"`
 }
