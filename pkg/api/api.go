@@ -95,6 +95,30 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("failed to json encode GetCVAdditionalDB response"), http.StatusInternalServerError)
 			return
 		}
+	case "info":
+		rows, err := notion.GetInfoDB(api.notionClient)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprintf("failed to retrieve info DB from notion API"), http.StatusInternalServerError)
+			return
+		}
+		encoder.SetEscapeHTML(false) // don't encode <, >, &
+		payload := rami.InfoResponse{
+			LastRefreshed: Timestamp(),
+			Rows:          rows,
+		}
+		if err := writeToFile("info.json", payload); err != nil {
+			http.Error(w, fmt.Sprintf("failed to persist json response to disk"), http.StatusInternalServerError)
+			return
+		}
+		if err := encoder.Encode(payload); err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprintf("failed to json encode info response"), http.StatusInternalServerError)
+			return
+		}
+	default:
+		http.Error(w, fmt.Sprintf("failed to retrieve DB: %s from notion API", name), http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
