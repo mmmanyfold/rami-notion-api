@@ -67,6 +67,7 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 			Rows:          rows,
 		}
 		if err := writeToFile("projects.json", payload); err != nil {
+			log.Println(err)
 			http.Error(w, fmt.Sprintf("failed to persist json response to disk"), http.StatusInternalServerError)
 			return
 		}
@@ -87,6 +88,7 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 			Rows:          rows,
 		}
 		if err := writeToFile("cv-additional.json", payload); err != nil {
+			log.Println(err)
 			http.Error(w, fmt.Sprintf("failed to persist json response to disk"), http.StatusInternalServerError)
 			return
 		}
@@ -108,6 +110,7 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 			Rows:          rows,
 		}
 		if err := writeToFile("info.json", payload); err != nil {
+			log.Println(err)
 			http.Error(w, fmt.Sprintf("failed to persist json response to disk"), http.StatusInternalServerError)
 			return
 		}
