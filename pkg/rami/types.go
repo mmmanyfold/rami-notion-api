@@ -69,6 +69,7 @@ type CVAdditional struct {
 	Description string `json:"description"`
 	Detail      string `json:"detail"`
 	URL         string `json:"url"`
+	Download    []File `json:"download,omitempty"`
 }
 
 type CVAdditionalResponse struct {

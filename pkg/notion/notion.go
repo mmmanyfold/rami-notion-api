@@ -72,7 +72,7 @@ func GetCVAdditionalDB(client *notionapi.Client) (rows []rami.CVAdditional, err 
 			row.Detail = processRichTextProperty(&r, "Detail")
 			row.URL = processTitle(&r, "URL")
 			row.Tag = processTag(&r, "Tag")
-			// TODO: Download prop
+			row.Download = processFilesProperty(&r, "Download")
 			// TODO: For Project Press page relation prop
 			rows = append(rows, row)
 		}
