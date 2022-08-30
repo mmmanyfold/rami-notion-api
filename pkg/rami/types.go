@@ -72,6 +72,20 @@ type CVAdditional struct {
 	Download    []File `json:"download,omitempty"`
 }
 
+type CVExhibitionsAndScreening struct {
+	UUID        string `json:"uuid,omitempty"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Extra       string `json:"extra"`
+	URL         string `json:"url"`
+	Download    []File `json:"download,omitempty"`
+}
+
+type CVExhibitionsAndScreeningResponse struct {
+	LastRefreshed string                      `json:"lastRefreshed"`
+	Rows          []CVExhibitionsAndScreening `json:"rows"`
+}
+
 type CVAdditionalResponse struct {
 	LastRefreshed string         `json:"lastRefreshed"`
 	Rows          []CVAdditional `json:"rows"`

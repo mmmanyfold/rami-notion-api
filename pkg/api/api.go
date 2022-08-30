@@ -119,6 +119,28 @@ func (api *API) Sync(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("failed to json encode info response"), http.StatusInternalServerError)
 			return
 		}
+	case "cv-exhibitions-and-screenings":
+		rows, err := notion.GetCVExhibitionsAndScreeningDB(api.notionClient)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprintf("failed to retrieve cv-exhibitions-and-screenings DB from notion API"), http.StatusInternalServerError)
+			return
+		}
+		encoder.SetEscapeHTML(false) // don't encode <, >, &
+		payload := rami.CVExhibitionsAndScreeningResponse{
+			LastRefreshed: Timestamp(),
+			Rows:          rows,
+		}
+		if err := writeToFile("cv-exhibitions-and-screenings.json", payload); err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprintf("failed to persist json response to disk"), http.StatusInternalServerError)
+			return
+		}
+		if err := encoder.Encode(payload); err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprintf("failed to json encode info response"), http.StatusInternalServerError)
+			return
+		}
 	default:
 		http.Error(w, fmt.Sprintf("failed to retrieve DB: %s from notion API", name), http.StatusInternalServerError)
 		return
