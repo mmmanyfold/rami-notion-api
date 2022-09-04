@@ -41,7 +41,9 @@ USER app
 RUN mkdir "public"
 
 ARG PORT
+ARG MODE
 ENV PORT ${PORT:-8080}
+ENV MODE ${MODE:-production}
 
 ARG NOTION_API_KEY
 ENV NOTION_API_KEY ${NOTION_API_KEY:-unset}

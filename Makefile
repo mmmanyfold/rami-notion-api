@@ -21,7 +21,7 @@ check:
 	go vet ./...
 
 dev:
-	reflex -c reflex.conf
+	MODE=development reflex -c reflex.conf
 
 clean:
 	@echo "clearing test cache"

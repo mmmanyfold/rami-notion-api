@@ -48,11 +48,18 @@ type ProjectsResponse struct {
 type Info struct {
 	UUID        string `json:"uuid,omitempty"`
 	ProjectUUID string `json:"ProjectUUID,omitempty"`
+	Tags        []Tag  `json:"tags,omitempty"`
+	Line1       string `json:"line-1,omitempty"`
+	Line2       string `json:"line-2,omitempty"`
+	Line3       string `json:"line-3,omitempty"`
+	Line4       string `json:"line-4,omitempty"`
+	URL         string `json:"url"`
+	Download    []File `json:"download,omitempty"`
 }
 
 type InfoResponse struct {
-	LastRefreshed string    `json:"lastRefreshed"`
-	AllInfo       []Project `json:"allProjects"`
+	LastRefreshed string `json:"lastRefreshed"`
+	Rows          []Info `json:"rows"`
 }
 
 type CVAdditional struct {
@@ -62,6 +69,21 @@ type CVAdditional struct {
 	Description string `json:"description"`
 	Detail      string `json:"detail"`
 	URL         string `json:"url"`
+	Download    []File `json:"download,omitempty"`
+}
+
+type CVExhibitionsAndScreening struct {
+	UUID        string `json:"uuid,omitempty"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Extra       string `json:"extra"`
+	URL         string `json:"url"`
+	Download    []File `json:"download,omitempty"`
+}
+
+type CVExhibitionsAndScreeningResponse struct {
+	LastRefreshed string                      `json:"lastRefreshed"`
+	Rows          []CVExhibitionsAndScreening `json:"rows"`
 }
 
 type CVAdditionalResponse struct {

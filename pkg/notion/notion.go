@@ -11,12 +11,73 @@ import (
 )
 
 var Databases = map[string]notionapi.DatabaseID{
-	"projects":                     notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"), // resource
-	"homepage":                     notionapi.DatabaseID("a79aece399014bc282a27024de23464a"),
-	"transcripts":                  notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
-	"info":                         notionapi.DatabaseID("74db7bbeb10b41dca217d55e9a675e3e"), // resource
-	"cv-exhibitions-and-screening": notionapi.DatabaseID("9090f44a583049d7a7fa478b2dd329a8"), // resource
-	"cv-additional":                notionapi.DatabaseID("78403af9f31145ce98c7a9ffa57931f8"), // resource
+	"projects":                      notionapi.DatabaseID("bee593efdc654282911f3dc5550e144a"), // resource
+	"homepage":                      notionapi.DatabaseID("a79aece399014bc282a27024de23464a"),
+	"transcripts":                   notionapi.DatabaseID("d815aa37777a4b04812f38b0b9d81b89"),
+	"info":                          notionapi.DatabaseID("74db7bbeb10b41dca217d55e9a675e3e"), // resource
+	"cv-exhibitions-and-screenings": notionapi.DatabaseID("9090f44a583049d7a7fa478b2dd329a8"), // resource
+	"cv-additional":                 notionapi.DatabaseID("78403af9f31145ce98c7a9ffa57931f8"), // resource
+}
+
+func GetInfoDB(client *notionapi.Client) (rows []rami.Info, err error) {
+	dbRequest := notionapi.DatabaseQueryRequest{
+		Filter:      nil,
+		Sorts:       nil,
+		StartCursor: "",
+		PageSize:    0,
+	}
+
+	db, err := client.Database.Query(context.Background(), Databases["info"], &dbRequest)
+	if err != nil {
+		return rows, err
+	}
+
+	if len(db.Results) > 0 {
+		for _, r := range db.Results {
+			var row rami.Info
+			row.UUID = string(r.ID)
+			row.Tags = processTags(&r)
+			row.Line1 = processRichTextProperty(&r, "Line 1")
+			row.Line2 = processRichTextProperty(&r, "Line 2")
+			row.Line3 = processRichTextProperty(&r, "Line 3")
+			row.Line4 = processRichTextProperty(&r, "Line 4")
+			row.URL = processTitle(&r, "URL")
+			row.Download = processFilesProperty(&r, "Download")
+			rows = append(rows, row)
+		}
+	}
+
+	return rows, nil
+}
+
+func GetCVExhibitionsAndScreeningDB(client *notionapi.Client) (rows []rami.CVExhibitionsAndScreening, err error) {
+	dbRequest := notionapi.DatabaseQueryRequest{
+		Filter:      nil,
+		Sorts:       nil,
+		StartCursor: "",
+		PageSize:    0,
+	}
+
+	db, err := client.Database.Query(context.Background(), Databases["cv-exhibitions-and-screenings"], &dbRequest)
+	if err != nil {
+		return rows, err
+	}
+
+	if len(db.Results) > 0 {
+		for _, r := range db.Results {
+			var row rami.CVExhibitionsAndScreening
+			row.UUID = string(r.ID)
+			row.Title = processRichTextProperty(&r, "Title")
+			row.Description = processRichTextProperty(&r, "Description")
+			row.Extra = processRichTextProperty(&r, "Extra")
+			row.URL = processTitle(&r, "URL")
+			row.Download = processFilesProperty(&r, "Download")
+			// TODO: For Project Press page relation prop
+			rows = append(rows, row)
+		}
+	}
+
+	return rows, err
 }
 
 func GetCVAdditionalDB(client *notionapi.Client) (rows []rami.CVAdditional, err error) {
@@ -41,7 +102,7 @@ func GetCVAdditionalDB(client *notionapi.Client) (rows []rami.CVAdditional, err 
 			row.Detail = processRichTextProperty(&r, "Detail")
 			row.URL = processTitle(&r, "URL")
 			row.Tag = processTag(&r, "Tag")
-			// TODO: Download prop
+			row.Download = processFilesProperty(&r, "Download")
 			// TODO: For Project Press page relation prop
 			rows = append(rows, row)
 		}
@@ -211,6 +272,21 @@ func processRichTextProperty(page *notionapi.Page, field string) (text string) {
 	}
 
 	return text
+}
+
+func processFilesProperty(page *notionapi.Page, field string) (files []rami.File) {
+	if filesProperty, ok := page.Properties[field].(*notionapi.FilesProperty); ok {
+		for _, rt := range filesProperty.Files {
+			if len(filesProperty.Files) > 0 {
+				file := rami.File{
+					Url: rt.File.URL,
+				}
+				files = append(files, file)
+			}
+		}
+	}
+
+	return files
 }
 
 func processHomePageAsset(page *notionapi.Page, assets []rami.HomePageAsset) (homePageAssets rami.HomePageAsset) {
