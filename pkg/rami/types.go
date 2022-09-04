@@ -79,6 +79,7 @@ type CVExhibitionsAndScreening struct {
 	Extra       string `json:"extra"`
 	URL         string `json:"url"`
 	Download    []File `json:"download,omitempty"`
+	Year        string `json:"year,omitempty"`
 }
 
 type CVExhibitionsAndScreeningResponse struct {

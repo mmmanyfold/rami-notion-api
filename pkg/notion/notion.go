@@ -72,6 +72,7 @@ func GetCVExhibitionsAndScreeningDB(client *notionapi.Client) (rows []rami.CVExh
 			row.Extra = processRichTextProperty(&r, "Extra")
 			row.URL = processTitle(&r, "URL")
 			row.Download = processFilesProperty(&r, "Download")
+			row.Year = processSelect(&r, "Year")
 			// TODO: For Project Press page relation prop
 			rows = append(rows, row)
 		}
@@ -206,7 +207,7 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 				ID:             id,
 				Title:          title,
 				Tags:           processTags(&r),
-				Year:           processYears(&r),
+				Year:           processSelect(&r, "Year"),
 				Thumbnail:      processThumbnail(&r),
 				Medium:         processRichTextProperty(&r, "Medium"),
 				Description:    processRichTextProperty(&r, "Description"),
@@ -220,8 +221,8 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 	return rows, nil
 }
 
-func processTitle(page *notionapi.Page, field string) (title string) {
-	if titleProperty, ok := page.Properties[field].(*notionapi.TitleProperty); ok {
+func processTitle(page *notionapi.Page, fieldName string) (title string) {
+	if titleProperty, ok := page.Properties[fieldName].(*notionapi.TitleProperty); ok {
 		if len(titleProperty.Title) > 0 {
 			title = titleProperty.Title[0].Text.Content
 		}
@@ -240,15 +241,15 @@ func processTags(page *notionapi.Page) (tags []rami.Tag) {
 	return tags
 }
 
-func processTag(page *notionapi.Page, field string) (tag string) {
-	if selectProperty, ok := page.Properties[field].(*notionapi.SelectProperty); ok {
+func processTag(page *notionapi.Page, fieldName string) (tag string) {
+	if selectProperty, ok := page.Properties[fieldName].(*notionapi.SelectProperty); ok {
 		tag = selectProperty.Select.Name
 	}
 	return tag
 }
 
-func processYears(page *notionapi.Page) (year string) {
-	if selectProperty, ok := page.Properties["Year"].(*notionapi.SelectProperty); ok {
+func processSelect(page *notionapi.Page, fieldName string) (year string) {
+	if selectProperty, ok := page.Properties[fieldName].(*notionapi.SelectProperty); ok {
 		year = selectProperty.Select.Name
 	}
 	return year
@@ -262,8 +263,8 @@ func processThumbnail(page *notionapi.Page) (thumbnailUrl string) {
 	return thumbnailUrl
 }
 
-func processRichTextProperty(page *notionapi.Page, field string) (text string) {
-	if textProperty, ok := page.Properties[field].(*notionapi.RichTextProperty); ok {
+func processRichTextProperty(page *notionapi.Page, fieldName string) (text string) {
+	if textProperty, ok := page.Properties[fieldName].(*notionapi.RichTextProperty); ok {
 		for _, rt := range textProperty.RichText {
 			if len(textProperty.RichText) > 0 {
 				text += rt.Text.Content
@@ -274,8 +275,8 @@ func processRichTextProperty(page *notionapi.Page, field string) (text string) {
 	return text
 }
 
-func processFilesProperty(page *notionapi.Page, field string) (files []rami.File) {
-	if filesProperty, ok := page.Properties[field].(*notionapi.FilesProperty); ok {
+func processFilesProperty(page *notionapi.Page, fieldName string) (files []rami.File) {
+	if filesProperty, ok := page.Properties[fieldName].(*notionapi.FilesProperty); ok {
 		for _, rt := range filesProperty.Files {
 			if len(filesProperty.Files) > 0 {
 				file := rami.File{
