@@ -36,12 +36,12 @@ func GetInfoDB(client *notionapi.Client) (rows []rami.Info, err error) {
 		for _, r := range db.Results {
 			var row rami.Info
 			row.UUID = string(r.ID)
-			row.Tags = processTags(&r)
+			row.Tag = processSelectProperty(&r, "Tag")
 			row.Line1 = processRichTextProperty(&r, "Line 1")
 			row.Line2 = processRichTextProperty(&r, "Line 2")
 			row.Line3 = processRichTextProperty(&r, "Line 3")
 			row.Line4 = processRichTextProperty(&r, "Line 4")
-			row.URL = processTitle(&r, "URL")
+			row.URL = processTitleProperty(&r, "URL")
 			row.Download = processFilesProperty(&r, "Download")
 			rows = append(rows, row)
 		}
@@ -70,7 +70,7 @@ func GetCVExhibitionsAndScreeningDB(client *notionapi.Client) (rows []rami.CVExh
 			row.Title = processRichTextProperty(&r, "Title")
 			row.Description = processRichTextProperty(&r, "Description")
 			row.Extra = processRichTextProperty(&r, "Extra")
-			row.URL = processTitle(&r, "URL")
+			row.URL = processTitleProperty(&r, "URL")
 			row.Download = processFilesProperty(&r, "Download")
 			row.Year = processSelect(&r, "Year")
 			// TODO: For Project Press page relation prop
@@ -101,8 +101,8 @@ func GetCVAdditionalDB(client *notionapi.Client) (rows []rami.CVAdditional, err 
 			row.Title = processRichTextProperty(&r, "Title")
 			row.Description = processRichTextProperty(&r, "Description")
 			row.Detail = processRichTextProperty(&r, "Detail")
-			row.URL = processTitle(&r, "URL")
-			row.Tag = processTag(&r, "Tag")
+			row.URL = processTitleProperty(&r, "URL")
+			row.Tag = processSelectProperty(&r, "Tag")
 			row.Download = processFilesProperty(&r, "Download")
 			// TODO: For Project Press page relation prop
 			rows = append(rows, row)
@@ -200,7 +200,7 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 
 	if len(db.Results) > 0 {
 		for _, r := range db.Results {
-			title := processTitle(&r, "Title")
+			title := processTitleProperty(&r, "Title")
 			id := processRichTextProperty(&r, "ID")
 			rows = append(rows, rami.Project{
 				UUID:           string(r.ID),
@@ -221,7 +221,7 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 	return rows, nil
 }
 
-func processTitle(page *notionapi.Page, fieldName string) (title string) {
+func processTitleProperty(page *notionapi.Page, fieldName string) (title string) {
 	if titleProperty, ok := page.Properties[fieldName].(*notionapi.TitleProperty); ok {
 		if len(titleProperty.Title) > 0 {
 			title = titleProperty.Title[0].Text.Content
@@ -241,7 +241,7 @@ func processTags(page *notionapi.Page) (tags []rami.Tag) {
 	return tags
 }
 
-func processTag(page *notionapi.Page, fieldName string) (tag string) {
+func processSelectProperty(page *notionapi.Page, fieldName string) (tag string) {
 	if selectProperty, ok := page.Properties[fieldName].(*notionapi.SelectProperty); ok {
 		tag = selectProperty.Select.Name
 	}

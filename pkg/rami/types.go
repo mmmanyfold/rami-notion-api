@@ -48,7 +48,7 @@ type ProjectsResponse struct {
 type Info struct {
 	UUID        string `json:"uuid,omitempty"`
 	ProjectUUID string `json:"ProjectUUID,omitempty"`
-	Tags        []Tag  `json:"tags,omitempty"`
+	Tag         string `json:"tag,omitempty"`
 	Line1       string `json:"line-1,omitempty"`
 	Line2       string `json:"line-2,omitempty"`
 	Line3       string `json:"line-3,omitempty"`
