@@ -65,16 +65,18 @@ func GetCVExhibitionsAndScreeningDB(client *notionapi.Client) (rows []rami.CVExh
 
 	if len(db.Results) > 0 {
 		for _, r := range db.Results {
-			var row rami.CVExhibitionsAndScreening
-			row.UUID = string(r.ID)
-			row.Title = processRichTextProperty(&r, "Title")
-			row.Description = processRichTextProperty(&r, "Description")
-			row.Detail = processRichTextProperty(&r, "Detail")
-			row.URL = processTitleProperty(&r, "URL")
-			row.Download = processFilesProperty(&r, "Download")
-			row.Year = processSelect(&r, "Year")
-			// TODO: For Project Press page relation prop
-			rows = append(rows, row)
+			if visible := processCheckboxProperty(&r, "Visible"); visible {
+				var row rami.CVExhibitionsAndScreening
+				row.UUID = string(r.ID)
+				row.Title = processRichTextProperty(&r, "Title")
+				row.Description = processRichTextProperty(&r, "Description")
+				row.Detail = processRichTextProperty(&r, "Detail")
+				row.URL = processTitleProperty(&r, "URL")
+				row.Download = processFilesProperty(&r, "Download")
+				row.Year = processSelect(&r, "Year")
+				// TODO: For Project Press page relation prop
+				rows = append(rows, row)
+			}
 		}
 	}
 
@@ -96,16 +98,18 @@ func GetCVAdditionalDB(client *notionapi.Client) (rows []rami.CVAdditional, err 
 
 	if len(db.Results) > 0 {
 		for _, r := range db.Results {
-			var row rami.CVAdditional
-			row.UUID = string(r.ID)
-			row.Title = processRichTextProperty(&r, "Title")
-			row.Description = processRichTextProperty(&r, "Description")
-			row.Detail = processRichTextProperty(&r, "Detail")
-			row.URL = processTitleProperty(&r, "URL")
-			row.Tag = processSelectProperty(&r, "Tag")
-			row.Download = processFilesProperty(&r, "Download")
-			// TODO: For Project Press page relation prop
-			rows = append(rows, row)
+			if visible := processCheckboxProperty(&r, "Visible"); visible {
+				var row rami.CVAdditional
+				row.UUID = string(r.ID)
+				row.Title = processRichTextProperty(&r, "Title")
+				row.Description = processRichTextProperty(&r, "Description")
+				row.Detail = processRichTextProperty(&r, "Detail")
+				row.URL = processTitleProperty(&r, "URL")
+				row.Tag = processSelectProperty(&r, "Tag")
+				row.Download = processFilesProperty(&r, "Download")
+				// TODO: For Project Press page relation prop
+				rows = append(rows, row)
+			}
 		}
 	}
 
@@ -202,19 +206,21 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 		for _, r := range db.Results {
 			title := processTitleProperty(&r, "Title")
 			id := processTextProperty(&r, "ID")
-			rows = append(rows, rami.Project{
-				UUID:           string(r.ID),
-				ID:             id,
-				Title:          title,
-				Tags:           processTags(&r),
-				Year:           processSelect(&r, "Year"),
-				Thumbnail:      processThumbnail(&r),
-				Medium:         processRichTextProperty(&r, "Medium"),
-				Description:    processRichTextProperty(&r, "Description"),
-				HomePageAssets: processHomePageAsset(&r, assets),
-				Transcript:     processTranscript(&r, transcripts),
-				Slug:           id + "-" + Slug(title),
-			})
+			if visible := processCheckboxProperty(&r, "Visible"); visible {
+				rows = append(rows, rami.Project{
+					UUID:           string(r.ID),
+					ID:             id,
+					Title:          title,
+					Tags:           processTags(&r),
+					Year:           processSelect(&r, "Year"),
+					Thumbnail:      processThumbnail(&r),
+					Medium:         processRichTextProperty(&r, "Medium"),
+					Description:    processRichTextProperty(&r, "Description"),
+					HomePageAssets: processHomePageAsset(&r, assets),
+					Transcript:     processTranscript(&r, transcripts),
+					Slug:           id + "-" + Slug(title),
+				})
+			}
 		}
 	}
 
@@ -338,4 +344,12 @@ func processTranscript(page *notionapi.Page, transcripts []rami.Transcript) (tra
 	}
 
 	return transcript
+}
+
+func processCheckboxProperty(page *notionapi.Page, fieldName string) (checkbox bool) {
+	if checkboxProperty, ok := page.Properties[fieldName].(*notionapi.CheckboxProperty); ok {
+		checkbox = checkboxProperty.Checkbox
+	}
+
+	return checkbox
 }
