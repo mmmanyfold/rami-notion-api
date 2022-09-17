@@ -69,7 +69,7 @@ func GetCVExhibitionsAndScreeningDB(client *notionapi.Client) (rows []rami.CVExh
 			row.UUID = string(r.ID)
 			row.Title = processRichTextProperty(&r, "Title")
 			row.Description = processRichTextProperty(&r, "Description")
-			row.Extra = processRichTextProperty(&r, "Extra")
+			row.Detail = processRichTextProperty(&r, "Detail")
 			row.URL = processTitleProperty(&r, "URL")
 			row.Download = processFilesProperty(&r, "Download")
 			row.Year = processSelect(&r, "Year")
@@ -201,7 +201,7 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 	if len(db.Results) > 0 {
 		for _, r := range db.Results {
 			title := processTitleProperty(&r, "Title")
-			id := processRichTextProperty(&r, "ID")
+			id := processTextProperty(&r, "ID")
 			rows = append(rows, rami.Project{
 				UUID:           string(r.ID),
 				ID:             id,
@@ -263,7 +263,7 @@ func processThumbnail(page *notionapi.Page) (thumbnailUrl string) {
 	return thumbnailUrl
 }
 
-func processRichTextProperty(page *notionapi.Page, fieldName string) (text string) {
+func processTextProperty(page *notionapi.Page, fieldName string) (text string) {
 	if textProperty, ok := page.Properties[fieldName].(*notionapi.RichTextProperty); ok {
 		for _, rt := range textProperty.RichText {
 			if len(textProperty.RichText) > 0 {
@@ -273,6 +273,18 @@ func processRichTextProperty(page *notionapi.Page, fieldName string) (text strin
 	}
 
 	return text
+}
+
+func processRichTextProperty(page *notionapi.Page, fieldName string) (richText []notionapi.RichText) {
+	if textProperty, ok := page.Properties[fieldName].(*notionapi.RichTextProperty); ok {
+		for _, rt := range textProperty.RichText {
+			if len(textProperty.RichText) > 0 {
+				richText = append(richText, rt)
+			}
+		}
+	}
+
+	return richText
 }
 
 func processFilesProperty(page *notionapi.Page, fieldName string) (files []rami.File) {

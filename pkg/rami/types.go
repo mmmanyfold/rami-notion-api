@@ -26,18 +26,18 @@ type HomePageAsset struct {
 type Tag string
 
 type Project struct {
-	UUID           string        `json:"uuid,omitempty"`
-	ID             string        `json:"id,omitempty"`
-	Title          string        `json:"title" json:"title,omitempty"`
-	Tags           []Tag         `json:"tags,omitempty"`
-	Year           string        `json:"year,omitempty"`
-	Thumbnail      string        `json:"thumbnail,omitempty"`
-	Blocks         []string      `json:"blocks,omitempty"`
-	Medium         string        `json:"medium,omitempty"`
-	Description    string        `json:"description,omitempty"`
-	HomePageAssets HomePageAsset `json:"homePageAssets,omitempty"`
-	Transcript     Transcript    `json:"transcript,omitempty"`
-	Slug           string        `json:"slug,omitempty"`
+	UUID           string               `json:"uuid,omitempty"`
+	ID             string               `json:"id,omitempty"`
+	Title          string               `json:"title" json:"title,omitempty"`
+	Tags           []Tag                `json:"tags,omitempty"`
+	Year           string               `json:"year,omitempty"`
+	Thumbnail      string               `json:"thumbnail,omitempty"`
+	Blocks         []string             `json:"blocks,omitempty"`
+	Medium         []notionapi.RichText `json:"medium,omitempty"`
+	Description    []notionapi.RichText `json:"description,omitempty"`
+	HomePageAssets HomePageAsset        `json:"homePageAssets,omitempty"`
+	Transcript     Transcript           `json:"transcript,omitempty"`
+	Slug           string               `json:"slug,omitempty"`
 }
 
 type ProjectsResponse struct {
@@ -46,15 +46,15 @@ type ProjectsResponse struct {
 }
 
 type Info struct {
-	UUID        string `json:"uuid,omitempty"`
-	ProjectUUID string `json:"ProjectUUID,omitempty"`
-	Tag         string `json:"tag,omitempty"`
-	Line1       string `json:"line-1,omitempty"`
-	Line2       string `json:"line-2,omitempty"`
-	Line3       string `json:"line-3,omitempty"`
-	Line4       string `json:"line-4,omitempty"`
-	URL         string `json:"url"`
-	Download    []File `json:"download,omitempty"`
+	UUID        string               `json:"uuid,omitempty"`
+	ProjectUUID string               `json:"ProjectUUID,omitempty"`
+	Tag         string               `json:"tag,omitempty"`
+	Line1       []notionapi.RichText `json:"line-1,omitempty"`
+	Line2       []notionapi.RichText `json:"line-2,omitempty"`
+	Line3       []notionapi.RichText `json:"line-3,omitempty"`
+	Line4       []notionapi.RichText `json:"line-4,omitempty"`
+	URL         string               `json:"url"`
+	Download    []File               `json:"download,omitempty"`
 }
 
 type InfoResponse struct {
@@ -63,23 +63,23 @@ type InfoResponse struct {
 }
 
 type CVAdditional struct {
-	UUID        string `json:"uuid,omitempty"`
-	Tag         string `json:"tag"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Detail      string `json:"detail"`
-	URL         string `json:"url"`
-	Download    []File `json:"download,omitempty"`
+	UUID        string               `json:"uuid,omitempty"`
+	Tag         string               `json:"tag"`
+	Title       []notionapi.RichText `json:"title"`
+	Description []notionapi.RichText `json:"description"`
+	Detail      []notionapi.RichText `json:"detail"`
+	URL         string               `json:"url"`
+	Download    []File               `json:"download,omitempty"`
 }
 
 type CVExhibitionsAndScreening struct {
-	UUID        string `json:"uuid,omitempty"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Extra       string `json:"extra"`
-	URL         string `json:"url"`
-	Download    []File `json:"download,omitempty"`
-	Year        string `json:"year,omitempty"`
+	UUID        string               `json:"uuid,omitempty"`
+	Title       []notionapi.RichText `json:"title"`
+	Description []notionapi.RichText `json:"description"`
+	Detail      []notionapi.RichText `json:"detail"`
+	URL         string               `json:"url"`
+	Download    []File               `json:"download,omitempty"`
+	Year        string               `json:"year,omitempty"`
 }
 
 type CVExhibitionsAndScreeningResponse struct {
