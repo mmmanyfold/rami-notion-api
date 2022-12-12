@@ -207,7 +207,7 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 			title := processTitleProperty(&r, "Title")
 			id := processTextProperty(&r, "ID")
 			if visible := processCheckboxProperty(&r, "Visible"); visible {
-				rows = append(rows, rami.Project{
+				row := rami.Project{
 					UUID:           string(r.ID),
 					ID:             id,
 					Title:          title,
@@ -219,7 +219,21 @@ func GetProjects(client *notionapi.Client, assets []rami.HomePageAsset, transcri
 					HomePageAssets: processHomePageAsset(&r, assets),
 					Transcript:     processTranscript(&r, transcripts),
 					Slug:           id + "-" + Slug(title),
-				})
+				}
+				pagination := notionapi.Pagination{
+					StartCursor: "",
+					PageSize:    0,
+				}
+				pageBlocks, err := client.Block.GetChildren(context.TODO(), notionapi.BlockID(row.UUID), &pagination)
+				if err != nil {
+					errMessage := fmt.Sprintf("failed to get project blocks for page id: %s", row.UUID)
+					fmt.Println(errors.Wrap(err, errMessage))
+					break
+				}
+				if len(pageBlocks.Results) > 0 {
+					row.Blocks = pageBlocks.Results
+				}
+				rows = append(rows, row)
 			}
 		}
 	}

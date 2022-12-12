@@ -32,7 +32,8 @@ type Project struct {
 	Tags           []Tag                `json:"tags,omitempty"`
 	Year           string               `json:"year,omitempty"`
 	Thumbnail      string               `json:"thumbnail,omitempty"`
-	Blocks         []string             `json:"blocks,omitempty"`
+	ProjectUUID    string               `json:"ProjectUUID,omitempty"`
+	Blocks         []notionapi.Block    `json:"blocks,omitempty"`
 	Medium         []notionapi.RichText `json:"medium,omitempty"`
 	Description    []notionapi.RichText `json:"description,omitempty"`
 	HomePageAssets HomePageAsset        `json:"homePageAssets,omitempty"`
